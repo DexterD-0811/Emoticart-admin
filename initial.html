@@ -1,0 +1,2225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Overview</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100%;
+            display: flex;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        /* Authentication Styles */
+        .auth-page {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .auth-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            animation: slideUp 0.6s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-header {
+            text-align: center;
+            padding: 40px 32px 32px 32px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .auth-logo {
+            margin-bottom: 16px;
+        }
+
+        .logo-icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .auth-header h1 {
+            margin: 0 0 8px 0;
+            color: #2d3748;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .auth-subtitle {
+            margin: 0;
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .auth-form {
+            padding: 32px;
+        }
+
+        .auth-form .form-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .auth-form .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .auth-form .form-group input {
+            width: 100%;
+            padding: 14px 16px 14px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            transition: all 0.2s;
+            box-sizing: border-box;
+            background: white;
+        }
+
+        .auth-form .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 16px;
+            color: #718096;
+            pointer-events: none;
+        }
+
+        .password-toggle {
+            left: auto;
+            right: 16px;
+            cursor: pointer;
+            pointer-events: auto;
+            user-select: none;
+            padding: 4px;
+            border-radius: 4px;
+            transition: background 0.2s;
+        }
+
+        .password-toggle:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            font-size: 14px;
+        }
+
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            color: #4a5568;
+        }
+
+        .checkbox-container input {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .forgot-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: #5a67d8;
+            text-decoration: underline;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 14px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none;
+        }
+
+        .auth-btn.primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .auth-btn.primary:hover:not(:disabled) {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        .auth-btn.secondary {
+            background: #e2e8f0;
+            color: #4a5568;
+        }
+
+        .auth-btn.secondary:hover:not(:disabled) {
+            background: #cbd5e0;
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .auth-divider {
+            text-align: center;
+            margin: 24px 0;
+            position: relative;
+            color: #718096;
+            font-size: 14px;
+        }
+
+        .auth-divider::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: #e2e8f0;
+            z-index: 1;
+        }
+
+        .auth-divider span {
+            background: white;
+            padding: 0 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .demo-credentials {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 16px;
+            font-size: 14px;
+        }
+
+        .demo-item {
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+
+        .demo-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .auth-links {
+            text-align: center;
+            margin-top: 24px;
+        }
+
+        .back-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: #5a67d8;
+            text-decoration: underline;
+        }
+
+        .auth-footer {
+            text-align: center;
+            padding: 24px 32px;
+            border-top: 1px solid #e2e8f0;
+            background: #f7fafc;
+        }
+
+        .auth-footer p {
+            margin: 0;
+            color: #718096;
+            font-size: 12px;
+        }
+
+        .password-requirements {
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+
+        .password-requirements h4 {
+            margin: 0 0 12px 0;
+            color: #2d3748;
+            font-size: 14px;
+        }
+
+        .password-requirements ul {
+            margin: 0;
+            padding-left: 20px;
+            font-size: 13px;
+        }
+
+        .password-requirements li {
+            margin-bottom: 4px;
+            color: #f56565;
+            transition: color 0.2s;
+        }
+
+        .sidebar {
+            width: 250px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            padding: 24px 0;
+            position: fixed;
+            height: 100%;
+            left: 0;
+            top: 0;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 0 24px 24px 24px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .sidebar-logo {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .sidebar-nav {
+            padding: 0 12px;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin-bottom: 4px;
+            border-radius: 8px;
+            color: #4a5568;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .nav-item:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-item.active:hover {
+            background: #5a67d8;
+            transform: translateX(0);
+        }
+
+        .nav-icon {
+            margin-right: 12px;
+            font-size: 18px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .mobile-menu-btn {
+            display: none;
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            border-radius: 8px;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .top-nav {
+            position: fixed;
+            top: 0;
+            left: 250px;
+            right: 0;
+            height: 70px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            z-index: 999;
+            transition: left 0.3s ease;
+        }
+
+        .search-container {
+            flex: 1;
+            max-width: 500px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 48px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .top-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .theme-toggle:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .logout-btn {
+            background: #f56565;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logout-btn:hover {
+            background: #e53e3e;
+            transform: translateY(-1px);
+        }
+
+        .dashboard-container {
+            flex: 1;
+            margin-left: 250px;
+            margin-top: 70px;
+            padding: 20px;
+            min-height: calc(100% - 70px);
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Dark theme styles */
+        body.dark-theme {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        }
+
+        .dark-theme .sidebar,
+        .dark-theme .top-nav,
+        .dark-theme .header,
+        .dark-theme .kpi-card,
+        .dark-theme .chart-container,
+        .dark-theme .orders-section,
+        .dark-theme .notifications {
+            background: rgba(45, 55, 72, 0.95);
+            color: #f7fafc;
+        }
+
+        .dark-theme .sidebar-logo,
+        .dark-theme .header h1,
+        .dark-theme .kpi-value,
+        .dark-theme .chart-title,
+        .dark-theme .section-title {
+            color: #f7fafc;
+        }
+
+        .dark-theme .nav-item {
+            color: #cbd5e0;
+        }
+
+        .dark-theme .nav-item:hover {
+            background: rgba(102, 126, 234, 0.2);
+            color: #e2e8f0;
+        }
+
+        .dark-theme .search-input {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: #f7fafc;
+        }
+
+        .dark-theme .search-input:focus {
+            border-color: #667eea;
+        }
+
+        .dark-theme .theme-toggle {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: #f7fafc;
+        }
+
+        .dark-theme .theme-toggle:hover {
+            background: #4a5568;
+        }
+
+        .dark-theme .orders-table th {
+            background: #2d3748;
+            color: #cbd5e0;
+        }
+
+        .dark-theme .orders-table td {
+            color: #f7fafc;
+        }
+
+        .dark-theme .orders-table th,
+        .dark-theme .orders-table td {
+            border-bottom-color: #4a5568;
+        }
+
+        .dark-theme .notification-text {
+            color: #f7fafc;
+        }
+
+        /* Dark theme for auth pages */
+        .dark-theme .auth-card {
+            background: rgba(45, 55, 72, 0.95);
+            color: #f7fafc;
+        }
+
+        .dark-theme .auth-header {
+            border-bottom-color: #4a5568;
+        }
+
+        .dark-theme .auth-header h1 {
+            color: #f7fafc;
+        }
+
+        .dark-theme .auth-form .form-group input {
+            background: #2d3748;
+            border-color: #4a5568;
+            color: #f7fafc;
+        }
+
+        .dark-theme .auth-form .form-group input:focus {
+            border-color: #667eea;
+        }
+
+        .dark-theme .demo-credentials,
+        .dark-theme .password-requirements {
+            background: #2d3748;
+        }
+
+        .dark-theme .auth-footer {
+            background: #2d3748;
+            border-top-color: #4a5568;
+        }
+
+        .dark-theme .auth-divider::before {
+            background: #4a5568;
+        }
+
+        .dark-theme .auth-divider span {
+            background: rgba(45, 55, 72, 0.95);
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .header h1 {
+            margin: 0 0 16px 0;
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+
+        .date-filter {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .date-filter select {
+            padding: 8px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .date-filter select:hover {
+            border-color: #667eea;
+        }
+
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .kpi-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border-left: 4px solid;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .kpi-card.sales { border-left-color: #48bb78; }
+        .kpi-card.orders { border-left-color: #4299e1; }
+        .kpi-card.revenue { border-left-color: #ed8936; }
+        .kpi-card.users { border-left-color: #9f7aea; }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .kpi-title {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .kpi-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        .kpi-change {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .kpi-change.positive { color: #48bb78; }
+        .kpi-change.negative { color: #f56565; }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 20px;
+        }
+
+        .chart-canvas {
+            max-height: 300px;
+        }
+
+        .orders-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .view-all-btn {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .view-all-btn:hover {
+            background: #5a67d8;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow-x: auto;
+        }
+
+        .orders-table th,
+        .orders-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .orders-table th {
+            background: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .orders-table td {
+            color: #2d3748;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-completed { background: #c6f6d5; color: #22543d; }
+        .status-pending { background: #fef5e7; color: #c05621; }
+        .status-processing { background: #bee3f8; color: #2a69ac; }
+        .status-shipped { background: #e6fffa; color: #234e52; }
+        .status-delivered { background: #c6f6d5; color: #22543d; }
+        .status-cancelled { background: #fed7d7; color: #c53030; }
+
+        .notifications {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .notification-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .notification-item:last-child {
+            border-bottom: none;
+        }
+
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-size: 14px;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-text {
+            font-size: 14px;
+            color: #2d3748;
+            margin-bottom: 4px;
+        }
+
+        .notification-time {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        /* Modal Styles */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1003;
+            padding: 20px;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px 24px 0 24px;
+            border-bottom: 1px solid #e2e8f0;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h2 {
+            margin: 0;
+            color: #2d3748;
+            font-size: 20px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #718096;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.2s;
+        }
+
+        .close-btn:hover {
+            background: #f7fafc;
+            color: #2d3748;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .mobile-menu-btn {
+                display: block;
+            }
+            
+            .top-nav {
+                left: 0;
+                padding: 0 60px 0 20px;
+            }
+            
+            .search-container {
+                max-width: 200px;
+            }
+            
+            .top-nav-actions {
+                gap: 8px;
+            }
+            
+            .theme-toggle {
+                padding: 6px 8px;
+                font-size: 14px;
+            }
+            
+            .logout-btn {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
+            
+            .dashboard-container {
+                margin-left: 0;
+            }
+            
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .date-filter {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            
+            .orders-table {
+                font-size: 14px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="auth-page" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-logo">
+                        <span class="logo-icon">🏢</span>
+                        <h1>Admin Dashboard</h1>
+                    </div>
+                    <p class="auth-subtitle">Sign in to your account</p>
+                </div>
+                
+                <form id="loginForm" class="auth-form" onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label for="loginEmail">Email Address</label>
+                        <input type="email" id="loginEmail" required placeholder="admin@dashboard.com" value="admin@dashboard.com">
+                        <span class="input-icon">📧</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Enter your password" value="admin123">
+                        <span class="input-icon password-toggle" onclick="togglePassword('loginPassword')">👁️</span>
+                    </div>
+                    
+                    <div class="form-options">
+                        <label class="checkbox-container">
+                            <input type="checkbox" id="rememberMe">
+                            <span class="checkmark"></span>
+                            Remember me for 30 days
+                        </label>
+                        <a href="#" class="forgot-link" onclick="showForgotPassword()">Forgot password?</a>
+                    </div>
+                    
+                    <button type="submit" class="auth-btn primary" id="loginBtn">
+                        <span class="btn-text">Sign In</span>
+                        <span class="btn-loading" style="display: none;">🔄 Signing in...</span>
+                    </button>
+                    
+                    <div class="auth-divider">
+                        <span>Demo Credentials</span>
+                    </div>
+                    
+                    <div class="demo-credentials">
+                        <div class="demo-item">
+                            <strong>Email:</strong> admin@dashboard.com
+                        </div>
+                        <div class="demo-item">
+                            <strong>Password:</strong> admin123
+                        </div>
+                    </div>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>© 2024 Dashboard. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Forgot Password Page -->
+    <div id="forgotPasswordPage" class="auth-page" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-logo">
+                        <span class="logo-icon">🔐</span>
+                        <h1>Reset Password</h1>
+                    </div>
+                    <p class="auth-subtitle">Enter your email to receive a reset link</p>
+                </div>
+                
+                <form id="forgotPasswordForm" class="auth-form" onsubmit="handleForgotPassword(event)">
+                    <div class="form-group">
+                        <label for="forgotEmail">Email Address</label>
+                        <input type="email" id="forgotEmail" required placeholder="Enter your email address">
+                        <span class="input-icon">📧</span>
+                    </div>
+                    
+                    <button type="submit" class="auth-btn primary" id="forgotBtn">
+                        <span class="btn-text">Send Reset Link</span>
+                        <span class="btn-loading" style="display: none;">📤 Sending...</span>
+                    </button>
+                    
+                    <div class="auth-links">
+                        <a href="#" onclick="showLogin()" class="back-link">← Back to Sign In</a>
+                    </div>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>© 2024 Dashboard. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reset Password Page -->
+    <div id="resetPasswordPage" class="auth-page" style="display: none;">
+        <div class="auth-container">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="auth-logo">
+                        <span class="logo-icon">🔑</span>
+                        <h1>Create New Password</h1>
+                    </div>
+                    <p class="auth-subtitle">Enter your new password below</p>
+                </div>
+                
+                <form id="resetPasswordForm" class="auth-form" onsubmit="handleResetPassword(event)">
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" required placeholder="Enter new password" minlength="6">
+                        <span class="input-icon password-toggle" onclick="togglePassword('newPassword')">👁️</span>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm Password</label>
+                        <input type="password" id="confirmPassword" required placeholder="Confirm new password" minlength="6">
+                        <span class="input-icon password-toggle" onclick="togglePassword('confirmPassword')">👁️</span>
+                    </div>
+                    
+                    <div class="password-requirements">
+                        <h4>Password Requirements:</h4>
+                        <ul>
+                            <li id="req-length">At least 6 characters</li>
+                            <li id="req-uppercase">One uppercase letter</li>
+                            <li id="req-lowercase">One lowercase letter</li>
+                            <li id="req-number">One number</li>
+                        </ul>
+                    </div>
+                    
+                    <button type="submit" class="auth-btn primary" id="resetBtn">
+                        <span class="btn-text">Reset Password</span>
+                        <span class="btn-loading" style="display: none;">🔄 Resetting...</span>
+                    </button>
+                    
+                    <div class="auth-links">
+                        <a href="#" onclick="showLogin()" class="back-link">← Back to Sign In</a>
+                    </div>
+                </form>
+                
+                <div class="auth-footer">
+                    <p>© 2024 Dashboard. All rights reserved.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Session Timeout Modal -->
+    <div id="sessionTimeoutModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h2>⏰ Session Timeout Warning</h2>
+            </div>
+            <div style="padding: 0 24px 24px 24px; text-align: center;">
+                <p style="margin-bottom: 20px; color: #4a5568;">Your session will expire in <span id="timeoutCountdown" style="font-weight: bold; color: #f56565;">5:00</span></p>
+                <p style="margin-bottom: 24px; color: #718096;">Would you like to extend your session?</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button onclick="extendSession()" class="auth-btn primary" style="padding: 8px 16px;">Extend Session</button>
+                    <button onclick="logoutUser()" class="auth-btn secondary" style="padding: 8px 16px;">Logout</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="mobile-menu-btn" onclick="toggleSidebar()" style="display: none;">☰</button>
+    
+    <div class="top-nav" style="display: none;">
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="search-input" placeholder="Search products, orders, customers..." id="searchInput" oninput="handleSearch()">
+        </div>
+        <div class="top-nav-actions">
+            <button class="theme-toggle" onclick="toggleTheme()" id="themeToggle">
+                <span id="themeIcon">🌙</span>
+                <span id="themeText">Dark</span>
+            </button>
+            <button class="logout-btn" onclick="handleLogout()">
+                <span>🚪</span>
+                Logout
+            </button>
+        </div>
+    </div>
+    
+    <nav class="sidebar" id="sidebar" style="display: none;">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                🏢 <span>Dashboard</span>
+            </div>
+        </div>
+        <div class="sidebar-nav">
+            <a href="#" class="nav-item active" onclick="setActiveNav(this, 'dashboard')">
+                <span class="nav-icon">📊</span>
+                Dashboard
+            </a>
+            <a href="#" class="nav-item" onclick="setActiveNav(this, 'products')">
+                <span class="nav-icon">📦</span>
+                Products
+            </a>
+            <a href="#" class="nav-item" onclick="setActiveNav(this, 'category')">
+                <span class="nav-icon">🏷️</span>
+                Category
+            </a>
+            <a href="#" class="nav-item" onclick="setActiveNav(this, 'orders')">
+                <span class="nav-icon">🛒</span>
+                Orders
+            </a>
+            <a href="#" class="nav-item" onclick="setActiveNav(this, 'customers')">
+                <span class="nav-icon">👥</span>
+                Customers
+            </a>
+            <a href="#" class="nav-item" onclick="setActiveNav(this, 'analytics')">
+                <span class="nav-icon">📈</span>
+                Analytics
+            </a>
+        </div>
+    </nav>
+
+    <main class="dashboard-container" style="display: none;">
+        <!-- Dashboard Page -->
+        <div id="dashboardPage" class="page-section">
+            <header class="header">
+                <h1>📊 Dashboard Overview</h1>
+                <div class="date-filter">
+                    <label for="dateRange">Date Range:</label>
+                    <select id="dateRange" onchange="updateDashboard()">
+                        <option value="today">Today</option>
+                        <option value="week" selected>This Week</option>
+                        <option value="month">This Month</option>
+                        <option value="quarter">This Quarter</option>
+                    </select>
+                </div>
+            </header>
+
+            <section class="kpi-grid">
+                <div class="kpi-card sales">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total Sales</span>
+                        <div class="kpi-icon" style="background: #c6f6d5;">💰</div>
+                    </div>
+                    <div class="kpi-value" id="totalSales">$24,580</div>
+                    <div class="kpi-change positive" id="salesChange">+12.5% from last week</div>
+                </div>
+
+                <div class="kpi-card orders">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total Orders</span>
+                        <div class="kpi-icon" style="background: #bee3f8;">📦</div>
+                    </div>
+                    <div class="kpi-value" id="totalOrders">1,247</div>
+                    <div class="kpi-change positive" id="ordersChange">+8.3% from last week</div>
+                </div>
+
+                <div class="kpi-card revenue">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Total Revenue</span>
+                        <div class="kpi-icon" style="background: #fbd38d;">📈</div>
+                    </div>
+                    <div class="kpi-value" id="totalRevenue">$89,420</div>
+                    <div class="kpi-change positive" id="revenueChange">+15.2% from last week</div>
+                </div>
+
+                <div class="kpi-card users">
+                    <div class="kpi-header">
+                        <span class="kpi-title">Active Users</span>
+                        <div class="kpi-icon" style="background: #d6bcfa;">👥</div>
+                    </div>
+                    <div class="kpi-value" id="activeUsers">3,892</div>
+                    <div class="kpi-change positive" id="usersChange">+5.7% from last week</div>
+                </div>
+            </section>
+
+            <section class="charts-grid">
+                <div class="chart-container">
+                    <h3 class="chart-title">Sales Trends</h3>
+                    <canvas id="salesChart" class="chart-canvas"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <h3 class="chart-title">Orders by Category</h3>
+                    <canvas id="categoryChart" class="chart-canvas"></canvas>
+                </div>
+            </section>
+
+            <div class="chart-container" style="margin-bottom: 32px;">
+                <h3 class="chart-title">Top Products</h3>
+                <canvas id="productsChart" class="chart-canvas"></canvas>
+            </div>
+
+            <section class="orders-section">
+                <div class="section-header">
+                    <h2 class="section-title">Recent Orders</h2>
+                    <button class="view-all-btn" onclick="viewAllOrders()">View All Orders</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="orders-table">
+                        <thead>
+                            <tr>
+                                <th>Order ID</th>
+                                <th>Customer</th>
+                                <th>Product</th>
+                                <th>Amount</th>
+                                <th>Status</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ordersTableBody">
+                            <!-- Orders will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section class="notifications">
+                <h2 class="section-title" style="margin-bottom: 20px;">Recent Notifications</h2>
+                <div id="notificationsList">
+                    <!-- Notifications will be populated by JavaScript -->
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <script>
+        // Authentication System
+        const AUTH_CONFIG = {
+            SESSION_DURATION: 30 * 60 * 1000, // 30 minutes
+            WARNING_TIME: 5 * 60 * 1000, // 5 minutes before expiry
+            REMEMBER_DURATION: 30 * 24 * 60 * 60 * 1000, // 30 days
+            DEMO_USERS: {
+                'admin@dashboard.com': {
+                    password: 'admin123',
+                    role: 'admin',
+                    name: 'Admin User',
+                    permissions: ['dashboard', 'products', 'orders', 'customers', 'analytics', 'categories']
+                },
+                'manager@dashboard.com': {
+                    password: 'manager123',
+                    role: 'manager',
+                    name: 'Manager User',
+                    permissions: ['dashboard', 'products', 'orders', 'customers']
+                }
+            }
+        };
+
+        let sessionTimer = null;
+        let warningTimer = null;
+        let countdownTimer = null;
+        let currentUser = null;
+
+        // Initialize authentication
+        function initAuth() {
+            const token = localStorage.getItem('authToken') || sessionStorage.getItem('authToken');
+            const user = localStorage.getItem('currentUser') || sessionStorage.getItem('currentUser');
+            
+            if (token && user) {
+                try {
+                    currentUser = JSON.parse(user);
+                    if (validateToken(token)) {
+                        showDashboard();
+                        startSessionTimer();
+                        return;
+                    }
+                } catch (e) {
+                    console.error('Invalid user data');
+                }
+            }
+            
+            showLogin();
+        }
+
+        function validateToken(token) {
+            try {
+                const payload = JSON.parse(atob(token.split('.')[1]));
+                return payload.exp > Date.now();
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function generateToken(user, rememberMe = false) {
+            const expiry = Date.now() + (rememberMe ? AUTH_CONFIG.REMEMBER_DURATION : AUTH_CONFIG.SESSION_DURATION);
+            const payload = {
+                email: user.email,
+                role: user.role,
+                exp: expiry,
+                iat: Date.now()
+            };
+            
+            // Simple JWT-like token (for demo purposes)
+            const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
+            const payloadStr = btoa(JSON.stringify(payload));
+            const signature = btoa(`signature_${user.email}_${expiry}`);
+            
+            return `${header}.${payloadStr}.${signature}`;
+        }
+
+        function showLogin() {
+            hideAllPages();
+            document.getElementById('loginPage').style.display = 'flex';
+            document.getElementById('loginEmail').focus();
+        }
+
+        function showForgotPassword() {
+            hideAllPages();
+            document.getElementById('forgotPasswordPage').style.display = 'flex';
+            document.getElementById('forgotEmail').focus();
+        }
+
+        function showResetPassword(token = null) {
+            hideAllPages();
+            document.getElementById('resetPasswordPage').style.display = 'flex';
+            
+            if (token) {
+                // Validate reset token (demo)
+                if (token === 'demo-reset-token') {
+                    document.getElementById('newPassword').focus();
+                } else {
+                    showAuthError('Invalid or expired reset token');
+                    showLogin();
+                }
+            } else {
+                document.getElementById('newPassword').focus();
+            }
+        }
+
+        function showDashboard() {
+            hideAllPages();
+            document.querySelector('.sidebar').style.display = 'block';
+            document.querySelector('.top-nav').style.display = 'flex';
+            document.querySelector('.dashboard-container').style.display = 'block';
+            updateUserInterface();
+        }
+
+        function hideAllPages() {
+            document.getElementById('loginPage').style.display = 'none';
+            document.getElementById('forgotPasswordPage').style.display = 'none';
+            document.getElementById('resetPasswordPage').style.display = 'none';
+            document.querySelector('.sidebar').style.display = 'none';
+            document.querySelector('.top-nav').style.display = 'none';
+            document.querySelector('.dashboard-container').style.display = 'none';
+        }
+
+        function updateUserInterface() {
+            if (currentUser) {
+                // Update user info in top nav
+                const userInfo = document.createElement('div');
+                userInfo.style.cssText = 'display: flex; align-items: center; gap: 8px; margin-right: 16px; color: #4a5568; font-size: 14px;';
+                userInfo.innerHTML = `
+                    <span style="font-weight: 600;">${currentUser.name}</span>
+                    <span style="color: #718096;">(${currentUser.role})</span>
+                `;
+                
+                const topNavActions = document.querySelector('.top-nav-actions');
+                if (!topNavActions.querySelector('.user-info')) {
+                    userInfo.className = 'user-info';
+                    topNavActions.insertBefore(userInfo, topNavActions.firstChild);
+                }
+
+                // Hide nav items based on permissions
+                updateNavPermissions();
+            }
+        }
+
+        function updateNavPermissions() {
+            const navItems = document.querySelectorAll('.nav-item');
+            navItems.forEach(item => {
+                const section = item.getAttribute('onclick')?.match(/'([^']+)'/)?.[1];
+                if (section && !currentUser.permissions.includes(section)) {
+                    item.style.display = 'none';
+                } else {
+                    item.style.display = 'flex';
+                }
+            });
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            
+            setLoadingState('loginBtn', true);
+            
+            // Simulate API call
+            setTimeout(() => {
+                const user = AUTH_CONFIG.DEMO_USERS[email];
+                
+                if (user && user.password === password) {
+                    // Successful login
+                    currentUser = {
+                        email: email,
+                        name: user.name,
+                        role: user.role,
+                        permissions: user.permissions
+                    };
+                    
+                    const token = generateToken(currentUser, rememberMe);
+                    
+                    // Store token and user data
+                    if (rememberMe) {
+                        localStorage.setItem('authToken', token);
+                        localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    } else {
+                        sessionStorage.setItem('authToken', token);
+                        sessionStorage.setItem('currentUser', JSON.stringify(currentUser));
+                    }
+                    
+                    showAuthSuccess('Login successful! Welcome back.');
+                    setTimeout(() => {
+                        showDashboard();
+                        startSessionTimer();
+                        initializeCharts();
+                        populateOrdersTable();
+                        populateNotifications();
+                        updateDashboard();
+                    }, 1000);
+                } else {
+                    showAuthError('Invalid email or password. Please try again.');
+                }
+                
+                setLoadingState('loginBtn', false);
+            }, 1500);
+        }
+
+        function handleForgotPassword(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('forgotEmail').value;
+            setLoadingState('forgotBtn', true);
+            
+            // Simulate API call
+            setTimeout(() => {
+                if (AUTH_CONFIG.DEMO_USERS[email]) {
+                    showAuthSuccess('Password reset link sent to your email!');
+                    
+                    // For demo, show reset password page after 2 seconds
+                    setTimeout(() => {
+                        showResetPassword('demo-reset-token');
+                    }, 2000);
+                } else {
+                    showAuthError('Email address not found in our records.');
+                }
+                
+                setLoadingState('forgotBtn', false);
+            }, 1500);
+        }
+
+        function handleResetPassword(event) {
+            event.preventDefault();
+            
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (newPassword !== confirmPassword) {
+                showAuthError('Passwords do not match.');
+                return;
+            }
+            
+            if (!validatePassword(newPassword)) {
+                showAuthError('Password does not meet requirements.');
+                return;
+            }
+            
+            setLoadingState('resetBtn', true);
+            
+            // Simulate API call
+            setTimeout(() => {
+                showAuthSuccess('Password reset successfully! You can now sign in.');
+                setTimeout(() => {
+                    showLogin();
+                }, 2000);
+                
+                setLoadingState('resetBtn', false);
+            }, 1500);
+        }
+
+        function validatePassword(password) {
+            const requirements = {
+                length: password.length >= 6,
+                uppercase: /[A-Z]/.test(password),
+                lowercase: /[a-z]/.test(password),
+                number: /\d/.test(password)
+            };
+            
+            // Update requirement indicators
+            Object.keys(requirements).forEach(req => {
+                const element = document.getElementById(`req-${req}`);
+                if (element) {
+                    element.style.color = requirements[req] ? '#48bb78' : '#f56565';
+                    element.style.textDecoration = requirements[req] ? 'line-through' : 'none';
+                }
+            });
+            
+            return Object.values(requirements).every(Boolean);
+        }
+
+        function startSessionTimer() {
+            clearSessionTimers();
+            
+            // Set warning timer
+            warningTimer = setTimeout(() => {
+                showSessionWarning();
+            }, AUTH_CONFIG.SESSION_DURATION - AUTH_CONFIG.WARNING_TIME);
+            
+            // Set logout timer
+            sessionTimer = setTimeout(() => {
+                logoutUser('Session expired');
+            }, AUTH_CONFIG.SESSION_DURATION);
+        }
+
+        function clearSessionTimers() {
+            if (warningTimer) clearTimeout(warningTimer);
+            if (sessionTimer) clearTimeout(sessionTimer);
+            if (countdownTimer) clearInterval(countdownTimer);
+        }
+
+        function showSessionWarning() {
+            document.getElementById('sessionTimeoutModal').style.display = 'flex';
+            
+            let timeLeft = AUTH_CONFIG.WARNING_TIME / 1000; // 5 minutes in seconds
+            
+            countdownTimer = setInterval(() => {
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timeoutCountdown').textContent = 
+                    `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                timeLeft--;
+                
+                if (timeLeft < 0) {
+                    clearInterval(countdownTimer);
+                    logoutUser('Session expired');
+                }
+            }, 1000);
+        }
+
+        function extendSession() {
+            document.getElementById('sessionTimeoutModal').style.display = 'none';
+            clearSessionTimers();
+            
+            // Generate new token
+            const rememberMe = localStorage.getItem('authToken') !== null;
+            const token = generateToken(currentUser, rememberMe);
+            
+            if (rememberMe) {
+                localStorage.setItem('authToken', token);
+            } else {
+                sessionStorage.setItem('authToken', token);
+            }
+            
+            startSessionTimer();
+            showNotification('Session extended successfully!', 'success');
+        }
+
+        function logoutUser(reason = 'Logged out successfully') {
+            clearSessionTimers();
+            document.getElementById('sessionTimeoutModal').style.display = 'none';
+            
+            // Clear stored data
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('currentUser');
+            sessionStorage.removeItem('authToken');
+            sessionStorage.removeItem('currentUser');
+            
+            currentUser = null;
+            
+            showNotification(reason, 'info');
+            setTimeout(() => {
+                showLogin();
+            }, 1000);
+        }
+
+        function togglePassword(inputId) {
+            const input = document.getElementById(inputId);
+            const icon = input.nextElementSibling;
+            
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.textContent = '🙈';
+            } else {
+                input.type = 'password';
+                icon.textContent = '👁️';
+            }
+        }
+
+        function setLoadingState(buttonId, loading) {
+            const button = document.getElementById(buttonId);
+            const text = button.querySelector('.btn-text');
+            const loadingSpan = button.querySelector('.btn-loading');
+            
+            if (loading) {
+                text.style.display = 'none';
+                loadingSpan.style.display = 'inline';
+                button.disabled = true;
+            } else {
+                text.style.display = 'inline';
+                loadingSpan.style.display = 'none';
+                button.disabled = false;
+            }
+        }
+
+        function showAuthSuccess(message) {
+            showAuthMessage(message, 'success');
+        }
+
+        function showAuthError(message) {
+            showAuthMessage(message, 'error');
+        }
+
+        function showAuthMessage(message, type) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? '#48bb78' : '#f56565'};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1005;
+                font-weight: 500;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+                max-width: 300px;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 4000);
+        }
+
+        // Check for reset token in URL (for demo)
+        function checkResetToken() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) {
+                showResetPassword(token);
+                return true;
+            }
+            return false;
+        }
+
+        // Sample data
+        const dashboardData = {
+            today: {
+                sales: '$8,420',
+                orders: 156,
+                revenue: '$28,340',
+                users: 892,
+                salesChange: '+5.2% from yesterday',
+                ordersChange: '+12.1% from yesterday',
+                revenueChange: '+8.7% from yesterday',
+                usersChange: '+3.4% from yesterday'
+            },
+            week: {
+                sales: '$24,580',
+                orders: 1247,
+                revenue: '$89,420',
+                users: 3892,
+                salesChange: '+12.5% from last week',
+                ordersChange: '+8.3% from last week',
+                revenueChange: '+15.2% from last week',
+                usersChange: '+5.7% from last week'
+            },
+            month: {
+                sales: '$156,780',
+                orders: 8934,
+                revenue: '$542,180',
+                users: 15672,
+                salesChange: '+18.9% from last month',
+                ordersChange: '+22.4% from last month',
+                revenueChange: '+16.8% from last month',
+                usersChange: '+11.3% from last month'
+            },
+            quarter: {
+                sales: '$487,920',
+                orders: 26801,
+                revenue: '$1,628,540',
+                users: 47238,
+                salesChange: '+24.7% from last quarter',
+                ordersChange: '+19.6% from last quarter',
+                revenueChange: '+28.3% from last quarter',
+                usersChange: '+15.9% from last quarter'
+            }
+        };
+
+        const recentOrders = [
+            { id: '#ORD-2024-001', customer: 'John Smith', product: 'Wireless Headphones', amount: '$129.99', status: 'completed', date: '2024-01-15' },
+            { id: '#ORD-2024-002', customer: 'Sarah Johnson', product: 'Smart Watch', amount: '$299.99', status: 'processing', date: '2024-01-15' },
+            { id: '#ORD-2024-003', customer: 'Mike Davis', product: 'Laptop Stand', amount: '$79.99', status: 'pending', date: '2024-01-14' },
+            { id: '#ORD-2024-004', customer: 'Emily Brown', product: 'Bluetooth Speaker', amount: '$89.99', status: 'completed', date: '2024-01-14' },
+            { id: '#ORD-2024-005', customer: 'David Wilson', product: 'Phone Case', amount: '$24.99', status: 'completed', date: '2024-01-14' },
+            { id: '#ORD-2024-006', customer: 'Lisa Garcia', product: 'Tablet', amount: '$399.99', status: 'processing', date: '2024-01-13' },
+            { id: '#ORD-2024-007', customer: 'Tom Anderson', product: 'Keyboard', amount: '$149.99', status: 'pending', date: '2024-01-13' },
+            { id: '#ORD-2024-008', customer: 'Anna Martinez', product: 'Mouse Pad', amount: '$19.99', status: 'completed', date: '2024-01-13' }
+        ];
+
+        const notifications = [
+            { icon: '🔔', bg: '#bee3f8', text: 'New order received from premium customer', time: '5 minutes ago' },
+            { icon: '📊', bg: '#c6f6d5', text: 'Weekly sales report is ready for review', time: '1 hour ago' },
+            { icon: '⚠️', bg: '#fef5e7', text: 'Low stock alert: Wireless Headphones', time: '2 hours ago' },
+            { icon: '✅', bg: '#c6f6d5', text: 'Payment processed successfully', time: '3 hours ago' },
+            { icon: '👤', bg: '#d6bcfa', text: 'New user registration', time: '4 hours ago' }
+        ];
+
+        let salesChart, categoryChart, productsChart;
+
+        function updateDashboard() {
+            const selectedRange = document.getElementById('dateRange').value;
+            const data = dashboardData[selectedRange];
+
+            // Update KPI cards
+            document.getElementById('totalSales').textContent = data.sales;
+            document.getElementById('totalOrders').textContent = data.orders;
+            document.getElementById('totalRevenue').textContent = data.revenue;
+            document.getElementById('activeUsers').textContent = data.users;
+
+            document.getElementById('salesChange').textContent = data.salesChange;
+            document.getElementById('ordersChange').textContent = data.ordersChange;
+            document.getElementById('revenueChange').textContent = data.revenueChange;
+            document.getElementById('usersChange').textContent = data.usersChange;
+
+            // Update charts with new data
+            updateCharts();
+        }
+
+        function initializeCharts() {
+            // Sales Trends Chart
+            const salesCtx = document.getElementById('salesChart').getContext('2d');
+            salesChart = new Chart(salesCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+                    datasets: [{
+                        label: 'Sales ($)',
+                        data: [3200, 4100, 3800, 5200, 4800, 6100, 5900],
+                        borderColor: '#667eea',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Category Chart
+            const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+            categoryChart = new Chart(categoryCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Electronics', 'Clothing', 'Books', 'Home & Garden', 'Sports'],
+                    datasets: [{
+                        data: [35, 25, 15, 15, 10],
+                        backgroundColor: [
+                            '#667eea',
+                            '#764ba2',
+                            '#48bb78',
+                            '#ed8936',
+                            '#9f7aea'
+                        ],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                usePointStyle: true
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Top Products Chart
+            const productsCtx = document.getElementById('productsChart').getContext('2d');
+            productsChart = new Chart(productsCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Wireless Headphones', 'Smart Watch', 'Laptop Stand', 'Bluetooth Speaker', 'Phone Case'],
+                    datasets: [{
+                        label: 'Sales',
+                        data: [245, 189, 156, 134, 98],
+                        backgroundColor: [
+                            '#667eea',
+                            '#48bb78',
+                            '#ed8936',
+                            '#9f7aea',
+                            '#4299e1'
+                        ],
+                        borderRadius: 8,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                color: 'rgba(0,0,0,0.1)'
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: false
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateCharts() {
+            // Update chart data based on selected date range
+            const selectedRange = document.getElementById('dateRange').value;
+            
+            // Update sales chart data
+            let salesData;
+            switch(selectedRange) {
+                case 'today':
+                    salesData = [420, 680, 520, 890, 1200, 980, 1150];
+                    break;
+                case 'week':
+                    salesData = [3200, 4100, 3800, 5200, 4800, 6100, 5900];
+                    break;
+                case 'month':
+                    salesData = [12000, 15000, 13500, 18000, 16500, 21000, 19500];
+                    break;
+                case 'quarter':
+                    salesData = [45000, 52000, 48000, 61000, 58000, 67000, 63000];
+                    break;
+            }
+            
+            salesChart.data.datasets[0].data = salesData;
+            salesChart.update();
+        }
+
+        function populateOrdersTable() {
+            const tbody = document.getElementById('ordersTableBody');
+            tbody.innerHTML = '';
+
+            recentOrders.forEach(order => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${order.id}</strong></td>
+                    <td>${order.customer}</td>
+                    <td>${order.product}</td>
+                    <td><strong>${order.amount}</strong></td>
+                    <td><span class="status-badge status-${order.status}">${order.status}</span></td>
+                    <td>${order.date}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function populateNotifications() {
+            const container = document.getElementById('notificationsList');
+            container.innerHTML = '';
+
+            notifications.forEach(notification => {
+                const item = document.createElement('div');
+                item.className = 'notification-item';
+                item.innerHTML = `
+                    <div class="notification-icon" style="background: ${notification.bg};">
+                        ${notification.icon}
+                    </div>
+                    <div class="notification-content">
+                        <div class="notification-text">${notification.text}</div>
+                        <div class="notification-time">${notification.time}</div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function viewAllOrders() {
+            setActiveNav(document.querySelector('.nav-item[onclick*="orders"]'), 'orders');
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('open');
+        }
+
+        function setActiveNav(element, section) {
+            // Remove active class from all nav items
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Add active class to clicked item
+            element.classList.add('active');
+            
+            // Show appropriate content based on section
+            showSection(section);
+        }
+
+        function showSection(section) {
+            // For now, just show dashboard
+            console.log('Navigating to:', section);
+        }
+
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 90px;
+                right: 20px;
+                background: ${type === 'info' ? '#667eea' : '#48bb78'};
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+                z-index: 1002;
+                font-weight: 500;
+                transform: translateX(100%);
+                transition: transform 0.3s ease;
+            `;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => {
+                notification.style.transform = 'translateX(0)';
+            }, 100);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.transform = 'translateX(100%)';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        function handleSearch() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
+            if (searchTerm.length > 2) {
+                // Filter orders table based on search
+                const rows = document.querySelectorAll('#ordersTableBody tr');
+                let visibleCount = 0;
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        row.style.display = '';
+                        visibleCount++;
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+                
+                if (visibleCount === 0 && searchTerm.length > 0) {
+                    showNotification(`No results found for "${searchTerm}"`, 'info');
+                }
+            } else {
+                // Show all rows if search is cleared
+                document.querySelectorAll('#ordersTableBody tr').forEach(row => {
+                    row.style.display = '';
+                });
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            body.classList.toggle('dark-theme');
+            
+            if (body.classList.contains('dark-theme')) {
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
+                localStorage.setItem('theme', 'dark');
+                showNotification('Switched to dark theme', 'info');
+            } else {
+                themeIcon.textContent = '🌙';
+                themeText.textContent = 'Dark';
+                localStorage.setItem('theme', 'light');
+                showNotification('Switched to light theme', 'info');
+            }
+        }
+
+        function handleLogout() {
+            // Create confirmation modal instead of using confirm()
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.5);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 1003;
+            `;
+            
+            const modalContent = document.createElement('div');
+            modalContent.style.cssText = `
+                background: white;
+                padding: 32px;
+                border-radius: 16px;
+                box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+                text-align: center;
+                max-width: 400px;
+                margin: 20px;
+            `;
+            
+            modalContent.innerHTML = `
+                <h3 style="margin: 0 0 16px 0; color: #2d3748; font-size: 20px;">Confirm Logout</h3>
+                <p style="margin: 0 0 24px 0; color: #4a5568;">Are you sure you want to logout?</p>
+                <div style="display: flex; gap: 12px; justify-content: center;">
+                    <button onclick="confirmLogout()" style="background: #f56565; color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500;">Yes, Logout</button>
+                    <button onclick="cancelLogout()" style="background: #e2e8f0; color: #4a5568; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 500;">Cancel</button>
+                </div>
+            `;
+            
+            modal.appendChild(modalContent);
+            document.body.appendChild(modal);
+            
+            // Store modal reference for cleanup
+            window.logoutModal = modal;
+        }
+
+        function confirmLogout() {
+            document.body.removeChild(window.logoutModal);
+            logoutUser('Logged out successfully');
+        }
+
+        function cancelLogout() {
+            document.body.removeChild(window.logoutModal);
+        }
+
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const themeIcon = document.getElementById('themeIcon');
+            const themeText = document.getElementById('themeText');
+            
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                themeIcon.textContent = '☀️';
+                themeText.textContent = 'Light';
+            }
+        }
+
+        // Close sidebar when clicking outside on mobile
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const menuBtn = document.querySelector('.mobile-menu-btn');
+            
+            if (window.innerWidth <= 768 && 
+                !sidebar.contains(event.target) && 
+                !menuBtn.contains(event.target) && 
+                sidebar.classList.contains('open')) {
+                sidebar.classList.remove('open');
+            }
+        });
+
+        // Password strength indicator for reset password
+        document.addEventListener('DOMContentLoaded', function() {
+            const newPasswordInput = document.getElementById('newPassword');
+            if (newPasswordInput) {
+                newPasswordInput.addEventListener('input', function() {
+                    validatePassword(this.value);
+                });
+            }
+        });
+
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTheme();
+            
+            // Check for reset token first
+            if (!checkResetToken()) {
+                // Initialize authentication
+                initAuth();
+            }
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'992248554424bc46',t:'MTc2MTA2NTcyNy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
