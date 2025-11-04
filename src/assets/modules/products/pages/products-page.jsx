@@ -1,116 +1,153 @@
-import { useEffect } from "react";
+import { useState, useEffect, useMemo } from 'react';
+import { ProductHeader } from '../components/product-header';
+import { ProductFilters } from '../components/product-filters';
+import { ProductTable } from '../components/product-table';
+import { useProduct } from '../../common/hooks/use-product';
+import { AddProductModal } from '../components/add-product-modal';
+import { DeleteProductModal } from '../components/delete-product-modal';
+import { EditProductModal } from '../components/edit-product-modal';
 
-export function ProductsPage() {
-  const showAddProduct = () => {
-    // TODO: implement add product modal or page logic
-    console.log("Add product clicked");
-  };
+export const ProductsPage = () => {
+  const {
+    allProducts,
+    addProduct,
+    data: products = [],
+    updateProduct,
+    deleteProduct,
+    isPending,
+    isFailed,
+    isSuccess,
+  } = useProduct();
 
-  const filterProducts = () => {
-    // TODO: implement product filtering logic
-    console.log("Filtering products...");
-  };
+  const [filters, setFilters] = useState({
+    search: '',
+    category: '',
+    status: '',
+    minPrice: '',
+    maxPrice: ''
+  });
 
-  const sortProducts = (field) => {
-    // TODO: implement sorting logic
-    console.log(`Sorting by ${field}`);
-  };
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [productToEdit, setProductToEdit] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
-    // TODO: fetch or populate product list on mount
-  }, []);
+    allProducts();
+  }, [allProducts]);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter(product => {
+      if (filters.search && !product.name.toLowerCase().includes(filters.search.toLowerCase())) return false;
+      if (filters.category) {
+        const productCategoryId = typeof product.category === 'object' ? product.category._id : product.category;
+        if (productCategoryId !== filters.category) return false;
+      }
+      if (filters.status) {
+        if (filters.status === 'active' && !product.isActive) return false;
+        if (filters.status === 'inactive' && product.isActive) return false;
+      }
+      if (filters.minPrice && product.price < Number(filters.minPrice)) return false;
+      if (filters.maxPrice && product.price > Number(filters.maxPrice)) return false;
+      return true;
+    });
+  }, [products, filters]);
+
+  const handleSaveProduct = async (productData, productId = null) => {
+    if (productId) {
+      await updateProduct(productId, productData);
+    } else {
+      await addProduct(productData);
+    }
+    await allProducts();
+    setIsModalOpen(false);
+  }
+
+  const handleFilterChange = (key, value) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }
+
+  const handleToggleStatus = async (product) => {
+    await updateProduct(product._id, { isActive: !product.isActive });
+    await allProducts();
+  }
+
+  const handleEdit = (product) => {
+    setProductToEdit(product);
+    setEditModalOpen(true);
+  }
+
+  const handleDelete = (product) => {
+    setProductToDelete(product);
+    setDeleteModalOpen(true);
+  }
+
+  const handleConfirmDelete = async () => {
+    if (productToDelete) {
+      await deleteProduct(productToDelete._id);
+      setDeleteModalOpen(false);
+      setProductToDelete(null);
+      await allProducts();
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setProductToDelete(null);
+  }
 
   return (
     <div id="productsPage" className="page-section">
-      <header className="header">
-        <h1>📦 Product Management</h1>
-        <div className="product-actions">
-          <button className="add-product-btn" onClick={showAddProduct}>
-            <span>➕</span> Add New Product
-          </button>
-        </div>
-      </header>
+      <ProductHeader onAddProduct={() => setIsModalOpen(true)} />
 
-      {/* Product Filters */}
-      <div className="filters-section">
-        <div className="filter-group">
-          <input
-            type="text"
-            id="productSearch"
-            placeholder="Search products..."
-            className="filter-input"
-            onInput={filterProducts}
-          />
-          <select
-            id="categoryFilter"
-            className="filter-select"
-            onChange={filterProducts}
-          >
-            <option value="">All Categories</option>
-            <option value="Electronics">Electronics</option>
-            <option value="Clothing">Clothing</option>
-            <option value="Books">Books</option>
-            <option value="Home & Garden">Home & Garden</option>
-            <option value="Sports">Sports</option>
-          </select>
+      <AddProductModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={(data) => handleSaveProduct(data)}
+      />
 
-          <select
-            id="statusFilter"
-            className="filter-select"
-            onChange={filterProducts}
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
+      <DeleteProductModal
+        isOpen={deleteModalOpen}
+        product={productToDelete}
+        onClose={() => setDeleteModalOpen(false)}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+      />
 
-          <div className="price-range">
-            <input
-              type="number"
-              id="minPrice"
-              placeholder="Min Price"
-              className="price-input"
-              onInput={filterProducts}
-            />
-            <input
-              type="number"
-              id="maxPrice"
-              placeholder="Max Price"
-              className="price-input"
-              onInput={filterProducts}
-            />
-          </div>
-        </div>
-      </div>
+      <EditProductModal
+        isOpen={editModalOpen}
+        product={productToEdit}
+        onSave={async (updatedData) => {
+          if (productToEdit) {
+            await updateProduct(productToEdit._id, updatedData);
+            await allProducts();
+          }
+          setEditModalOpen(false);
+          setProductToEdit(null);
+        }}
+        onCancel={() => {
+          setEditModalOpen(false);
+          setProductToEdit(null);
+        }}
+      />
 
-      {/* Products Table */}
-      <div className="products-table-container">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th onClick={() => sortProducts("name")}>
-                Product Name <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => sortProducts("category")}>
-                Category <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => sortProducts("price")}>
-                Price <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => sortProducts("stock")}>
-                Stock <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => sortProducts("status")}>
-                Status <span className="sort-icon">↕️</span>
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="productsTableBody">
-            {/* TODO: Map over your products array here */}
-          </tbody>
-        </table>
-      </div>
+      <ProductFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+      />
+
+      {isPending && <p>Loading products...</p>}
+      {isFailed && <p style={{ color: "red" }}>Failed to load products.</p>}
+      {isSuccess && (
+        <ProductTable
+          products={filteredProducts}
+          onSort={(key) => console.log("Sort by", key)}
+          onEdit={handleEdit}
+          onDelete={handleDelete}
+          onToggleStatus={handleToggleStatus}
+        />
+      )}
     </div>
   );
-}
+};

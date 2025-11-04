@@ -63,7 +63,7 @@ border-bottom: 1px solid #e2e8f0;
 margin-bottom: 16px;
 }
 
-.logo-icon {
+.logo-img {
 font-size: 48px;
 display: block;
 margin-bottom: 16px;
@@ -332,13 +332,19 @@ border-bottom: 1px solid #e2e8f0;
 margin-bottom: 24px;
 }
 
-.sidebar-logo {
+.sidebar-text {
 font-size: 24px;
 font-weight: 700;
 color: #2d3748;
 display: flex;
 align-items: center;
 gap: 8px;
+}
+
+.sidebar-logo {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
 }
 
 .sidebar-nav {
@@ -1264,6 +1270,85 @@ transition: all 0.2s;
 .close-btn:hover {
 background: #f7fafc;
 color: #2d3748;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 24px;
+    border-top: 1px solid #e2e8f0;
+    margin-top: 24px;
+}
+
+.cancel-btn {
+    background: #e2e8f0;
+    color: #4a5568;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.cancel-btn:hover {
+    background: #cbd5e0;
+}
+
+.save-btn {
+    background: #48bb78;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.save-btn:hover {
+    background: #38a169;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+    padding: 0 24px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 600;
+    color: #4a5568;
+    font-size: 14px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 16px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.2s;
+    box-sizing: border-box;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
 }
 
 @media (max-width: 768px) {

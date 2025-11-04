@@ -1,9 +1,7 @@
-import { useState } from 'react';
-import { Link } from 'react-router';
+import { NavLink } from 'react-router';
+import logo from '../../../Emoticart.png'; // adjust the path to match your project
 
 export function SideBar() {
-  const [activeNav, setActiveNav] = useState('dashboard');
-
   const navItems = [
     { id: 'dashboard', icon: '📊', label: 'Dashboard' },
     { id: 'products', icon: '📦', label: 'Products' },
@@ -13,31 +11,29 @@ export function SideBar() {
     { id: 'analytics', icon: '📈', label: 'Analytics' },
   ];
 
-  const handleNavClick = (id) => {
-    setActiveNav(id);
-    console.log(`Navigated to ${id}`);
-  };
-
   return (
     <nav className="sidebar" id="sidebar">
       <div className="sidebar-header">
-        <div className="sidebar-logo">
-          🏢 <span>Dashboard</span>
+        <div className="sidebar-text">
+          <img 
+            src={logo} 
+            alt="Company Logo" 
+            className="sidebar-logo" 
+          />
+          <span>Emoticart</span>
         </div>
       </div>
 
       <div className="sidebar-nav">
         {navItems.map((item) => (
-          <Link
+          <NavLink
             key={item.id}
             to={`/admin/${item.id}`}
-            className={`nav-item ${activeNav === item.id ? 'active' : ''}`}
-            onClick={() => 
-              handleNavClick(item.id)}
+            className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
           >
             <span className="nav-icon">{item.icon}</span>
             {item.label}
-          </Link>
+          </NavLink>
         ))}
       </div>
     </nav>

@@ -1,110 +1,194 @@
-export function CategoryPage({
-  onAddCategory,
-  onFilterChange,
-  onClearFilters,
-  onSort,
-  categories = [],
-}) {
+import { useEffect, useState, useMemo } from "react";
+import { useCategory } from "../../common/hooks/use-category";
+import { useProduct } from "../../common/hooks/use-product";
+import { CategoryHeader } from "../components/category-header";
+import { CategoryFilters } from "../components/category-filters";
+import { CategoryTable } from "../components/category-table";
+import { AddCategoryModal } from "../components/add-category-modal";
+import { DeleteCategoryModal } from "../components/delete-category-modal";
+import { EditCategoryModal } from "../components/edit-category-modal";
+
+export function CategoryPage() {
+  const {
+    allCategories,
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    data: categories = [],
+    isPending,
+    isFailed,
+    isSuccess,
+  } = useCategory();
+
+  const {
+    allProducts,
+    data: products = [],
+  } = useProduct();
+
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [productCountFilter, setProductCountFilter] = useState("");
+  const [sortKey, setSortKey] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [categoryToDelete, setCategoryToDelete] = useState(null);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [categoryToEdit, setCategoryToEdit] = useState(null);
+
+  useEffect(() => {
+    allCategories();
+    allProducts();
+  }, [allCategories, allProducts]);
+
+  const categoriesWithCount = useMemo(() => {
+    return categories.map(category => {
+      const count = products.filter(p => {
+        if (!p.category) return false;
+        if (typeof p.category === "string") return p.category === category._id;
+        if (typeof p.category === "object") return p.category._id === category._id;
+        return false;
+      }).length;
+      return { ...category, productCount: count };
+    });
+  }, [categories, products]);
+
+  const filteredCategories = useMemo(() => {
+    return categoriesWithCount.filter(category => {
+      if (query && !category.name.toLowerCase().includes(query.toLowerCase())) return false;
+      if (statusFilter) {
+        if (statusFilter === "active" && category.status !== "active") return false;
+        if (statusFilter === "inactive" && category.status !== "inactive") return false;
+      }
+      if (productCountFilter) {
+        const count = category.productCount || 0;
+        if (productCountFilter === "empty" && count !== 0) return false;
+        if (productCountFilter === "low" && (count < 1 || count > 10)) return false;
+        if (productCountFilter === "medium" && (count < 11 || count > 50)) return false;
+        if (productCountFilter === "high" && count <= 50) return false;
+      }
+      return true;
+    }).sort((a, b) => {
+      if (!sortKey) return 0;
+      let valA = a[sortKey];
+      let valB = b[sortKey];
+      if (typeof valA === "string") valA = valA.toLowerCase();
+      if (typeof valB === "string") valB = valB.toLowerCase();
+      if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+      if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [categoriesWithCount, query, statusFilter, productCountFilter, sortKey, sortOrder]);
+
+  const handleSaveCategory = async (categoryData, categoryId = null) => {
+    if (categoryId) {
+      await updateCategory(categoryId, categoryData);
+    } else {
+      await addCategory(categoryData);
+    }
+    await allCategories();
+    setIsModalOpen(false);
+  };
+
+  const handleEdit = (category) => {
+    setCategoryToEdit(category);
+    setEditModalOpen(true);
+  };
+
+  const handleDeleteClick = (category) => {
+    setCategoryToDelete(category);
+    setDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (categoryToDelete) {
+      await deleteCategory(categoryToDelete._id);
+      setDeleteModalOpen(false);
+      setCategoryToDelete(null);
+      await allCategories();
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteModalOpen(false);
+    setCategoryToDelete(null);
+  };
+
+  const handleToggleStatus = async (category) => {
+    const newStatus = category.status === "active" ? "inactive" : "active";
+    await updateCategory(category._id, { status: newStatus });
+    await allCategories();
+  };
+
+  const handleClearFilters = () => {
+    setQuery("");
+    setStatusFilter("");
+    setProductCountFilter("");
+  };
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortOrder(prev => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+  };
+
   return (
     <div id="categoriesPage" className="page-section">
-      <header className="header">
-        <h1>🗂️ Category Management</h1>
-        <div className="product-actions">
-          <button className="add-product-btn" onClick={onAddCategory}>
-            <span>➕</span> Add New Category
-          </button>
-        </div>
-      </header>
+      <CategoryHeader onAddCategory={() => setIsModalOpen(true)} />
 
-      {/* Category Filters */}
-      <div className="filters-section">
-        <div
-          className="filter-group"
-          style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}
-        >
-          <input
-            type="text"
-            id="categorySearch"
-            placeholder="Search categories..."
-            className="filter-input"
-            onInput={(e) => onFilterChange("search", e.target.value)}
+      <AddCategoryModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveCategory}
+      />
+
+      <EditCategoryModal
+        isOpen={editModalOpen}
+        categoryId={categoryToEdit ? categoryToEdit._id : null}
+        onSave={async (updatedData) => {
+          setEditModalOpen(false);
+          if (categoryToEdit) {
+            await updateCategory(categoryToEdit._id, updatedData);
+            await allCategories();
+          }
+        }}
+        onCancel={() => setEditModalOpen(false)}
+      />
+
+      <CategoryFilters
+        query={query}
+        setQuery={setQuery}
+        status={statusFilter}
+        setStatusFilter={setStatusFilter}
+        onFilterChange={setProductCountFilter}
+        onClearFilters={handleClearFilters}
+      />
+
+      {isPending && <p>Loading categories...</p>}
+      {isFailed && <p style={{ color: "red" }}>Failed to load categories.</p>}
+      {isSuccess && (
+        <>
+          <CategoryTable
+            categories={filteredCategories}
+            onEdit={handleEdit}
+            onDelete={handleDeleteClick}
+            onToggleStatus={handleToggleStatus}
+            onSort={handleSort}
+            sortKey={sortKey}
+            sortOrder={sortOrder}
           />
-          <select
-            id="productCountFilter"
-            className="filter-select"
-            onChange={(e) => onFilterChange("productCount", e.target.value)}
-          >
-            <option value="">All Categories</option>
-            <option value="empty">Empty (0 products)</option>
-            <option value="low">Low (1–10 products)</option>
-            <option value="medium">Medium (11–50 products)</option>
-            <option value="high">High (50+ products)</option>
-          </select>
-          <select
-            id="categoryStatusFilter"
-            className="filter-select"
-            onChange={(e) => onFilterChange("status", e.target.value)}
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-          </select>
-          <button className="view-all-btn" onClick={onClearFilters}>
-            Clear Filters
-          </button>
-        </div>
-      </div>
 
-      {/* Categories Table */}
-      <div className="products-table-container">
-        <table className="products-table">
-          <thead>
-            <tr>
-              <th onClick={() => onSort("name")}>
-                Category Name <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => onSort("description")}>
-                Description <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => onSort("productCount")}>
-                Product Count <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => onSort("status")}>
-                Status <span className="sort-icon">↕️</span>
-              </th>
-              <th onClick={() => onSort("createdDate")}>
-                Created Date <span className="sort-icon">↕️</span>
-              </th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="categoriesTableBody">
-            {/* Example row rendering */}
-            {categories.length === 0 ? (
-              <tr>
-                <td colSpan="6" style={{ textAlign: "center" }}>
-                  No categories found.
-                </td>
-              </tr>
-            ) : (
-              categories.map((category) => (
-                <tr key={category.id}>
-                  <td>{category.name}</td>
-                  <td>{category.description}</td>
-                  <td>{category.productCount}</td>
-                  <td>{category.status}</td>
-                  <td>{category.createdDate}</td>
-                  <td>
-                    {/* You can replace with real handlers */}
-                    <button>Edit</button>
-                    <button>Delete</button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
+          <DeleteCategoryModal
+            isOpen={deleteModalOpen}
+            category={categoryToDelete}
+            onConfirm={handleConfirmDelete}
+            onCancel={handleCancelDelete}
+          />
+        </>
+      )}
     </div>
   );
 }
