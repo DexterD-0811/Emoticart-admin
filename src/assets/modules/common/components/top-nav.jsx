@@ -2,37 +2,26 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router';
 
 export function TopNav() {
-  const [searchValue, setSearchValue] = useState('');
-  const [theme, setTheme] = useState('dark'); // 'dark' or 'light'
   const navigate = useNavigate();
+  const [searchValue, setSearchValue] = useState('');
 
   const toggleSidebar = () => {
-    // implement sidebar toggle logic
     console.log('Sidebar toggled');
   };
 
   const handleSearch = (e) => {
-    const value = e.target.value;
-    setSearchValue(value);
-    console.log('Search:', value);
-  };
-
-  const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setSearchValue(e.target.value);
+    console.log('Search:', e.target.value);
   };
 
   const handleLogout = () => {
-    // implement logout logic
     console.log('Logout clicked');
     navigate('/');
   };
 
   return (
     <>
-      <button
-        className="mobile-menu-btn"
-        onClick={toggleSidebar}
-      >
+      <button className="mobile-menu-btn" onClick={toggleSidebar}>
         ☰
       </button>
 
@@ -43,18 +32,12 @@ export function TopNav() {
             type="text"
             className="search-input"
             placeholder="Search products, orders, customers..."
-            id="searchInput"
             value={searchValue}
             onInput={handleSearch}
           />
         </div>
 
         <div className="top-nav-actions">
-          <button className="theme-toggle" onClick={toggleTheme} id="themeToggle">
-            <span id="themeIcon">{theme === 'dark' ? '🌙' : '☀️'}</span>
-            <span id="themeText">{theme === 'dark' ? 'Dark' : 'Light'}</span>
-          </button>
-
           <button className="logout-btn" onClick={handleLogout}>
             <span>🚪</span>
             Logout

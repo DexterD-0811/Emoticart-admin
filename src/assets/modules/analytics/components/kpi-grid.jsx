@@ -3,12 +3,8 @@ import React from 'react';
 export const KPIGrid = ({
   avgOrderValue,
   aovChange,
-  customerLTV,
-  clvChange,
-  conversionRate,
-  conversionChange,
-  returnRate,
-  returnChange,
+  lifetimeValue,
+  orderFulfillmentRate,
 }) => {
   const kpis = [
     {
@@ -16,32 +12,28 @@ export const KPIGrid = ({
       icon: '💰',
       background: '#c6f6d5',
       value: avgOrderValue,
-      change: aovChange,
       idPrefix: 'avgOrderValue',
     },
     {
       title: 'Customer Lifetime Value',
       icon: '👥',
       background: '#bee3f8',
-      value: customerLTV,
-      change: clvChange,
+      value: lifetimeValue,
       idPrefix: 'customerLTV',
     },
     {
-      title: 'Conversion Rate',
-      icon: '📊',
+      title: 'Total Sales',
+      icon: '📈',
       background: '#fbd38d',
-      value: conversionRate,
-      change: conversionChange,
-      idPrefix: 'conversionRate',
+      value: aovChange,
+      idPrefix: 'totalSales',
     },
     {
-      title: 'Return Customer Rate',
-      icon: '🔄',
+      title: 'Order Fulfillment Rate',
+      icon: '✅',
       background: '#d6bcfa',
-      value: returnRate,
-      change: returnChange,
-      idPrefix: 'returnRate',
+      value: orderFulfillmentRate,
+      idPrefix: 'orderFulfillmentRate',
     },
   ];
 
@@ -59,9 +51,6 @@ export const KPIGrid = ({
             </div>
           </div>
           <div className="kpi-value" id={kpi.idPrefix}>{kpi.value}</div>
-          <div className="kpi-change positive" id={`${kpi.idPrefix}Change`}>
-            {kpi.change}
-          </div>
         </div>
       ))}
     </section>

@@ -126,7 +126,7 @@ export const ProductsPage = () => {
           setEditModalOpen(false);
           setProductToEdit(null);
         }}
-        onCancel={() => {
+        onClose={() => {
           setEditModalOpen(false);
           setProductToEdit(null);
         }}

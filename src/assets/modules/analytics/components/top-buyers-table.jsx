@@ -1,12 +1,12 @@
-import React from "react";
+export const TopBuyersTable = ({ stats }) => {
+  const topStats = stats?.slice(0, 3) || [];
 
-export const TopBuyersTable = ({ buyers }) => {
   return (
     <div
       className="analytics-table-container"
       style={{ maxHeight: 300, overflowY: "auto", marginBottom: 24 }}
     >
-      <h4>Top Buyers</h4>
+      <h4 className="chart-title">🎩Top Buyers</h4>
       <table className="analytics-table">
         <thead>
           <tr>
@@ -15,11 +15,11 @@ export const TopBuyersTable = ({ buyers }) => {
           </tr>
         </thead>
         <tbody>
-          {buyers && buyers.length > 0 ? (
-            buyers.map(({ id, customer, totalSpend }) => (
-              <tr key={id}>
-                <td>{customer}</td>
-                <td>{totalSpend}</td>
+          {topStats.length > 0 ? (
+            topStats.map(({ _id, name, totalSpent }) => (
+              <tr key={_id}>
+                <td>{name}</td>
+                <td>${totalSpent.toFixed(2)}</td>
               </tr>
             ))
           ) : (

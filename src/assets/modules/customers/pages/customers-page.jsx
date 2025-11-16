@@ -1,190 +1,146 @@
-import React from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
+import { CustomerHeader } from "../components/customer-header";
+import { CustomerFilters } from "../components/customer-filters";
+import { CustomerTable } from "../components/customer-table";
+import { CustomerKPI } from "../components/customer-kpi";
+import { useCustomer } from "../../common/hooks/use-customer";
+import { useCustomerStats } from "../../common/hooks/use-customer-stats";
 
-export function CustomersPage({
-  onExport,
-  onFilterChange,
-  onClearFilters,
-  onSort,
-  customers,
-  customerCount,
-  totalCustomers,
-  activeCustomers,
-  newCustomers,
-  avgLifetimeValue,
-  customersGrowth,
-  activeGrowth,
-  newGrowth,
-  clvGrowth,
-}) {
+export function CustomersPage() {
+  const {
+    allCustomers,
+    data: customers = [],
+    isPending,
+    isFailed,
+    isSuccess,
+  } = useCustomer();
+
+  const { allCustomerStats, data: stats = [] } = useCustomerStats();
+
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [ordersFilter, setOrdersFilter] = useState("");
+  const [dateFromFilter, setDateFromFilter] = useState("");
+  const [sortKey, setSortKey] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+
+  const avgLifetimeValue = stats.length
+  ? (stats.reduce((sum, s) => sum + (s.totalSpent || 0), 0) / stats.length).toFixed(2)
+  : 0;
+
+
+  useEffect(() => {
+    allCustomers();
+    allCustomerStats();
+  }, [allCustomers, allCustomerStats]);
+
+  const handleFilterChange = useCallback((e) => {
+    const { name, value } = e.target;
+    if (name === "search") setQuery(value);
+    if (name === "status") setStatusFilter(value);
+    if (name === "orders") setOrdersFilter(value);
+    if (name === "dateFrom") setDateFromFilter(value);
+  }, []);
+
+  const handleClearFilters = useCallback(() => {
+    setQuery("");
+    setStatusFilter("");
+    setOrdersFilter("");
+    setDateFromFilter("");
+  }, []);
+
+  const handleSort = (key) => {
+    if (sortKey === key) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortKey(key);
+      setSortOrder("asc");
+    }
+  };
+
+  const filteredCustomers = useMemo(() => {
+    return customers
+      .filter((c) => {
+        const customerStat = stats.find((s) => s._id === c._id);
+        const customerOrders = customerStat?.totalOrders ?? 0;
+
+        if (
+          query &&
+          !(
+            c.name.toLowerCase().includes(query.toLowerCase()) ||
+            c.email.toLowerCase().includes(query.toLowerCase())
+          )
+        ) return false;
+
+        if (statusFilter && c.status !== statusFilter) return false;
+
+        switch (ordersFilter) {
+          case "new":
+            if (customerOrders !== 0) return false;
+            break;
+          case "low":
+            if (customerOrders < 1 || customerOrders > 5) return false;
+            break;
+          case "medium":
+            if (customerOrders < 6 || customerOrders <= 20 === false) return false;
+            if (customerOrders < 6 || customerOrders > 20) return false;
+            break;
+          case "high":
+            if (customerOrders <= 20) return false;
+            break;
+        }
+
+        if (dateFromFilter) {
+          const signupDate = new Date(c.createdAt);
+          const fromDate = new Date(dateFromFilter);
+          signupDate.setHours(0, 0, 0, 0);
+          fromDate.setHours(0, 0, 0, 0);
+          if (signupDate < fromDate) return false;
+        }
+
+        return true;
+      })
+      .sort((a, b) => {
+        if (!sortKey) return 0;
+        let valA = a[sortKey];
+        let valB = b[sortKey];
+        if (typeof valA === "string") valA = valA.toLowerCase();
+        if (typeof valB === "string") valB = valB.toLowerCase();
+        if (valA < valB) return sortOrder === "asc" ? -1 : 1;
+        if (valA > valB) return sortOrder === "asc" ? 1 : -1;
+        return 0;
+      });
+  }, [customers, stats, query, statusFilter, ordersFilter, dateFromFilter, sortKey, sortOrder]);
+
   return (
-    <section id="customersPage" className="page-section">
-      <header className="header">
-        <h1>👥 Customer Management</h1>
-        <div className="product-actions">
-          <button
-            className="add-product-btn"
-            style={{ background: "#48bb78" }}
-            onClick={() => onExport("csv")}
-          >
-            <span>📊</span> Export CSV
-          </button>
-          <button
-            className="add-product-btn"
-            style={{ background: "#ed8936" }}
-            onClick={() => onExport("pdf")}
-          >
-            <span>📄</span> Export PDF
-          </button>
-        </div>
-      </header>
-
-      {/* Filters */}
-      <div className="filters-section">
-        <div
-          className="filter-group"
-          style={{ gridTemplateColumns: "2fr 1fr 1fr 1fr" }}
-        >
-          <input
-            type="text"
-            id="customerSearch"
-            placeholder="Search by name or email..."
-            className="filter-input"
-            onChange={onFilterChange}
-            name="search"
-          />
-          <select
-            id="customerStatusFilter"
-            className="filter-select"
-            onChange={onFilterChange}
-            name="status"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="disabled">Disabled</option>
-          </select>
-          <select
-            id="customerOrdersFilter"
-            className="filter-select"
-            onChange={onFilterChange}
-            name="orders"
-          >
-            <option value="">All Customers</option>
-            <option value="new">New (0 orders)</option>
-            <option value="low">Low (1-5 orders)</option>
-            <option value="medium">Medium (6-20 orders)</option>
-            <option value="high">High (20+ orders)</option>
-          </select>
-          <input
-            type="date"
-            id="customerDateFrom"
-            className="filter-input"
-            onChange={onFilterChange}
-            name="dateFrom"
-            title="Signup Date From"
-          />
-        </div>
-        <div
-          style={{
-            marginTop: 12,
-            display: "flex",
-            gap: 12,
-            alignItems: "center",
-          }}
-        >
-          <button className="view-all-btn" onClick={onClearFilters}>
-            Clear Filters
-          </button>
-          <span
-            id="customerCount"
-            style={{ color: "#718096", fontSize: 14, alignSelf: "center" }}
-          >
-            {customerCount}
-          </span>
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <section
-        className="kpi-grid"
-        style={{ gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", marginBottom: 24 }}
-      >
-        <div className="kpi-card users">
-          <div className="kpi-header">
-            <span className="kpi-title">Total Customers</span>
-            <div className="kpi-icon" style={{ background: "#d6bcfa" }}>👥</div>
-          </div>
-          <div className="kpi-value" id="totalCustomers">{totalCustomers}</div>
-          <div className="kpi-change positive" id="customersGrowth">{customersGrowth}</div>
-        </div>
-
-        <div className="kpi-card sales">
-          <div className="kpi-header">
-            <span className="kpi-title">Active Customers</span>
-            <div className="kpi-icon" style={{ background: "#c6f6d5" }}>✅</div>
-          </div>
-          <div className="kpi-value" id="activeCustomers">{activeCustomers}</div>
-          <div className="kpi-change positive" id="activeGrowth">{activeGrowth}</div>
-        </div>
-
-        <div className="kpi-card orders">
-          <div className="kpi-header">
-            <span className="kpi-title">New This Month</span>
-            <div className="kpi-icon" style={{ background: "#bee3f8" }}>🆕</div>
-          </div>
-          <div className="kpi-value" id="newCustomers">{newCustomers}</div>
-          <div className="kpi-change positive" id="newGrowth">{newGrowth}</div>
-        </div>
-
-        <div className="kpi-card revenue">
-          <div className="kpi-header">
-            <span className="kpi-title">Avg. Lifetime Value</span>
-            <div className="kpi-icon" style={{ background: "#fbd38d" }}>💰</div>
-          </div>
-          <div className="kpi-value" id="avgLifetimeValue">{avgLifetimeValue}</div>
-          <div className="kpi-change positive" id="clvGrowth">{clvGrowth}</div>
-        </div>
-      </section>
-
-      {/* Customers Table */}
-      <div className="products-table-container">
-        <table className="products-table">
-          <thead>
-            <tr>
-              {[
-                { label: "Customer", key: "name" },
-                { label: "Email", key: "email" },
-                { label: "Signup Date", key: "signupDate" },
-                { label: "Total Orders", key: "totalOrders" },
-                { label: "Total Spent", key: "totalSpent" },
-                { label: "Last Login", key: "lastLogin" },
-                { label: "Status", key: "status" },
-              ].map(({ label, key }) => (
-                <th key={key} onClick={() => onSort(key)}>
-                  {label} <span className="sort-icon">↕️</span>
-                </th>
-              ))}
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody id="customersTableBody">
-            {(customers || []).map((customer) => (
-              <tr key={customer.id}>
-                <td>{customer.name}</td>
-                <td>{customer.email}</td>
-                <td>{customer.signupDate}</td>
-                <td>{customer.totalOrders}</td>
-                <td>{customer.totalSpent}</td>
-                <td>{customer.lastLogin}</td>
-                <td>{customer.status}</td>
-                <td>
-                  <button onClick={() => alert(`View ${customer.name}`)}>View</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <div id="customersPage" className="page-section">
+      <CustomerHeader />
+      <CustomerFilters
+        onFilterChange={handleFilterChange}
+        onClearFilters={handleClearFilters}
+        customerCount={filteredCustomers.length}
+      />
+      <CustomerKPI
+        totalCustomers={customers.length}
+        activeCustomers={customers.filter((c) => c.status === "active").length}
+        newCustomers={customers.filter((c) => {
+          const createdAt = new Date(c.createdAt);
+          const now = new Date();
+          return (now - createdAt) / (1000 * 60 * 60 * 24) <= 30;
+        }).length}
+        avgLifetimeValue={`$${avgLifetimeValue}`}
+      />
+      {isPending && <p>Loading customers...</p>}
+      {isFailed && <p style={{ color: "red" }}>Failed to load customers.</p>}
+      {isSuccess && (
+        <CustomerTable
+          customers={filteredCustomers}
+          stats={stats}
+          onSort={handleSort}
+          sortKey={sortKey}
+          sortOrder={sortOrder}
+        />
+      )}
+    </div>
   );
 }
